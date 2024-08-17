@@ -7,6 +7,9 @@ name = "pypi"
 langchain = "*"
 langchain-openai = "*"
 langchainhub = "*"
+flask = "*"
+pyodbc = "*"
+flask-sqlalchemy = "*"
 
 [dev-packages]
 

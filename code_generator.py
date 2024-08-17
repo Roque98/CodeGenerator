@@ -15,10 +15,12 @@ class CodeResponseResult(BaseModel):
     """
 
     code: str = Field(default=None, description="All the code")
-    path: str = Field(default=None, description="The name of path with this format (Views|Controllers|sql)/Name_path.extension")
-    documentation: str = Field(default=None, description="""The name and description of the all instance in the file with this format: 
-                                    (Name of method | Name of sp) : Description
+    path: str = Field(default=None, description="The name of path with this format (Views or Controllers or sql)/Name_path.extension. Example: Views/index.cshtml or sql/insert.sql")
+    documentation: str = Field(default=None, description=
+                               """The name and description of the all instance in the file with this format: 
+                                    (Name of method or Name of sp) : Description
                                """)
+    extension:str = Field(default=None, description="Extension of the code. Example cshtml, sql.")
 
 def generate_code_response(model: ChatOpenAI, result: str):
     """
@@ -89,7 +91,7 @@ def generate_sps(model: ChatOpenAI, script_table: str) -> str :
     output = prompt_and_model.invoke({"script_table": script_table, "date": datetime.now()})
 
     # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return output.content
+    return  generate_code_response(model, clean_mll_generated_sql(output.content))
 
 def clean_mll_generated_sql(text):
     """
@@ -103,7 +105,7 @@ def clean_mll_generated_sql(text):
         .replace("GO\n", "")\
         .replace("SET NOCOUNT ON;", "")\
         .replace("```", "")\
-        .strip()
+        .strip() 
     
     return cleaned_text
 
@@ -125,7 +127,6 @@ if __name__ == '__main__':
         GO
     """
 
-    result = clean_mll_generated_sql(generate_sps(model, script_table))
-    resultClass = generate_code_response(model, result)
-    print(result)
+    result = generate_sps(model, script_table)
+    print(result.documentation)
 
