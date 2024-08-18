@@ -8,6 +8,9 @@ langchain = "*"
 langchain-openai = "*"
 langchainhub = "*"
 shell = "*"
+flask = "*"
+pyodbc = "*"
+flask-sqlalchemy = "*"
 
 [dev-packages]
 

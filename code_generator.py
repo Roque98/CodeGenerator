@@ -15,10 +15,12 @@ class CodeResponseResult(BaseModel):
     """
 
     code: str = Field(default=None, description="All the code")
-    path: str = Field(default=None, description="The name of path with this format (Views|Controllers|sql)/Name_path.extension")
-    documentation: str = Field(default=None, description="""The name and description of the all instance in the file with this format: 
-                                    (Name of method | Name of sp) : Description
+    path: str = Field(default=None, description="The name of path with this format (Views or Controllers or sql)/Name_path.extension. Example: Views/index.cshtml or sql/insert.sql")
+    documentation: str = Field(default=None, description=
+                               """The name and description of the all instance in the file with this format: 
+                                    (Name of method or Name of sp) : Description
                                """)
+    extension:str = Field(default=None, description="Extension of the code. Example cshtml, sql.")
 
 def generate_code_response(model: ChatOpenAI, result: str):
     """
@@ -220,7 +222,7 @@ def clean_code_mll_generated(code):
         .replace("GO\n", "")\
         .replace("SET NOCOUNT ON;", "")\
         .replace("```", "")\
-        .strip()
+        .strip() 
     
     return code_text
 
