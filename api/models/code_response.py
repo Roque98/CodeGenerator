@@ -17,7 +17,10 @@ class CodeResponseResult(BaseModel):
     code: str = Field(default=None, description="All the code")
     path: str = Field(default=None, description="The name of path with this format (Entities or Models Views or Controllers or sql_scripts)/Name_path.extension. Example: Views/index.cshtml or sql/insert.sql")
     documentation: str = Field(default=None, description=
-                               """The name and description of the all instance in the file with this format: 
+                               """The list of the name and description of the all instance in the file with this format: 
+                                    (Name of method or Name of sp) : Description
+                                    (Name of method or Name of sp) : Description
+                                    ...
                                     (Name of method or Name of sp) : Description
                                """)
     extension:str = Field(default=None, description="Extension of the code. Example cshtml, sql.")
