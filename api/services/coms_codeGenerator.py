@@ -3,12 +3,15 @@ from datetime import datetime
 # from models.code_response import CodeResponseResult, generate_code_response
 from langchain_core.prompts import PromptTemplate
 
+from models import ChatModelSingleton
 from models.code_response import CodeResponseResult, generate_code_response
 from services.utils import clean_code_mll_generated
 
 
-def generate_sps(model: ChatOpenAI, script_table: str) -> CodeResponseResult :
+def generate_sps(script_table: str) -> CodeResponseResult :
     
+    model = ChatModelSingleton()
+
     promptTemplate = PromptTemplate.from_template(
         """
             Eres un generador de codigo sql para el manejador mmsql. La salida que generes sera guardada en un archivo por lo que no debes generar ningun texto adicional ademas del codigo. No agregues ningun caracter adicional o el compilador sql fallara
@@ -34,7 +37,7 @@ def generate_sps(model: ChatOpenAI, script_table: str) -> CodeResponseResult :
             -- Description:	<Description,,>
             -- =============================================
 
-            El sp _GetAll debe recibir al final como parametros opcionales fechaInicio y fechaFin para poder delimitar por fecha los resultados
+            Cambia <Description,,> por una documentacion adecuada.
         """
     )
 
@@ -49,7 +52,7 @@ def generate_sps(model: ChatOpenAI, script_table: str) -> CodeResponseResult :
 
 def generate_entidad_coms( script_table: str) -> CodeResponseResult:
     
-    model = ChatOpenAI(model="gpt-4o-mini")
+    model = ChatModelSingleton()
 
     promptTemplate = PromptTemplate.from_template(
         """
@@ -59,9 +62,9 @@ def generate_entidad_coms( script_table: str) -> CodeResponseResult:
             
             {script_table} 
             
-            Genera un archivo que contenga el codigo de las clases dto con el siguiente patron de nombre [operacionCrud][nombreEntidad]Entidad.cs. Donde [operacionCrud] puede ser remplazado por Create, Read, Update, Delete de pendiendo la operacion
+            Genera un archivo que contenga el codigo para guardar el resultado de la tabla llamado [nombreEntidad]Entidad.cs
             
-            Analiza las relaciones que existen y con base en ello agrega una propiedad en los DTO Read para guardar las referencias de las tablas. En las tablas intermedias se debe tener una propiedad para guardar la instancia relacionada y en las tablas padre una propieda para guardar la lista de las tablas hijo. No es necesario tener una propiedad que guarde una referencia sobre si mismo a menos que tenga una relacion hacia la misma entidad
+            Si existe una referencia a otra tabla genera una propiedad adicional para guardar la referencia a la tabla entidad
 
             Remplaza el texto [nombreEntidad] por un nombre adecuado tomando en cuenta el nombre de la tabla.
         """
@@ -76,41 +79,53 @@ def generate_entidad_coms( script_table: str) -> CodeResponseResult:
     # Parsear la salida para convertirla en una instancia de CodeResponseResult
     return generate_code_response(model, clean_code_mll_generated(output.content))
 
-def generate_interfaz_coms( script_table: str) -> CodeResponseResult:
+def generate_interfaz_coms( codigo_entidad: str) -> CodeResponseResult:
     
-    model = ChatOpenAI(model="gpt-4o-mini")
+    model = ChatModelSingleton()
+
+    fragmento_codigo = """
+            using FolderView.Dapper.Entidades;
+
+            namespace FolderView.Dapper.Interfaces
+            {
+                public interface IArchivoRepository
+                {
+                    Task<List<ArchivoEntidad>> GetAll(int directorioId);
+                    Task<ArchivoEntidad> GetByIdDirectorio(int directorioId);
+                }
+            }
+
+    """
+
+    lista_interfaces = """
+            Task<List<TipoProyectoEntidad>> CreateTipoProyectoAsync(CreateTipoProyectoEntidad dto);
+            Task<TipoProyectoEntidad> GetTipoProyectoByIdAsync(int id);
+            Task<List<TipoProyectoEntidad>> GetAllTipoProyecto();
+            Task<List<TipoProyectoEntidad>> UpdateTipoProyectoAsync(UpdateTipoProyectoEntidad dto);
+            Task<bool> TipoProyectoEntidad(int id);
+
+            Solo en caso de que exista alguna dependecia generar este metodo
+            Task<List<TipoProyectoEntidad>> GetAllTipoProyectoById[EntidadRelacionadaPadre]Async(int id);  ( Remplaza [EntidadRelacionadaPadre] por el nombre de la entidad referenciada. Genera tantos como sea posible)
+
+    """
 
     promptTemplate = PromptTemplate.from_template(
         """
             Eres un generador de codigo c#. La salida que generes sera guardada en un archivo por lo que no debes generar ningun texto adicional ademas del codigo. No agregues ningun caracter adicional o el compilador C# fallara
             
-            Tomando en cuenta todas los dtos anteriores, Toma como referencia el siguiente codigo del la clase IArchivoRepository respetando los imports y el namespace genera la interfaz [NombreProyecto]Repository
+            
+            Tomando en cuenta la siguiente clase entidad 
 
-            using FolderView.Dapper.Entidades;
+            {codigo_entidad}
+            
+            Toma como referencia el siguiente codigo del la clase IArchivoRepository respetando los imports y el namespace genera la interfaz [NombreEntidad]Repository
 
-            namespace FolderView.Dapper.Interfaces
-            {{
-                public interface IArchivoRepository
-                {{
-                    Task<List<ArchivoEntidad>> GetByDirectorioIdAsync(int directorioId);
-                }}
-            }}
-
+            {fragmento_codigo}
+            
             Lista las funciones en las que basarse que debe contener la interfaz
 
-            Task<List<ReadTipoProyectoEntidad>> CreateTipoProyectoAsync(CreateTipoProyectoEntidad dto);
-            Task<ReadTipoProyectoEntidad> GetTipoProyectoByIdAsync(int id);
-            Task<List<ReadTipoProyectoEntidad>> GetAllTipoProyectoById[EntidadRelacionadaPadre]Async(int id);  ( Remplaza [EntidadRelacionadaPadre] por el nombre de la entidad referenciada. Genera tantos como sea posible)
-            Task<List<ReadTipoProyectoEntidad>> GetAllTipoProyecto();
-            Task<List<ReadTipoProyectoEntidad>> UpdateTipoProyectoAsync(UpdateTipoProyectoEntidad dto);
-            Task<bool> DeleteTipoProyectoAsync(int id);
-
-
-            El [NombreProyecto] es CodeGenerator
+            {lista_interfaces}
             
-            Los dtos. Genera un metodo en la interfaz para cada dto
-
-            {script_table} 
         """
     )
 
@@ -118,14 +133,14 @@ def generate_interfaz_coms( script_table: str) -> CodeResponseResult:
     prompt_and_model = promptTemplate | model
 
     # Ejecutar el modelo con la consulta y obtener la salida
-    output = prompt_and_model.invoke({"script_table": script_table})
+    output = prompt_and_model.invoke({"codigo_entidad": codigo_entidad, "lista_interfaces": lista_interfaces,"fragmento_codigo" : fragmento_codigo})
 
     # Parsear la salida para convertirla en una instancia de CodeResponseResult
     return generate_code_response(model, clean_code_mll_generated(output.content))
 
-def generate_model_coms(documentation_sps: str, entidades: str, interfaz: str) -> CodeResponseResult:
+def generate_model_coms(entidades: str, interfaz: str) -> CodeResponseResult:
     
-    model = ChatOpenAI(model="gpt-4o-mini")
+    model = ChatModelSingleton()
 
     framgento_codigo = """
         using Dapper;
@@ -160,17 +175,11 @@ def generate_model_coms(documentation_sps: str, entidades: str, interfaz: str) -
         """
             Eres un generador de codigo c#. La salida que generes sera guardada en un archivo por lo que no debes generar ningun texto adicional ademas del codigo. No agregues ningun caracter adicional o el compilador C# fallara
             
-            Tomando en cuenta la siguiente documentacion de los sps 
-            
-            {documentation_sps} 
-            
-            y la clases entidad
+            Tomando en cuenta la siguiente entidad 
 
             {entidades}
 
-            Genera un archivo que contenga el codigo de la clase para model llamado [NombreProyecto]Model.cs
-
-            El [NombreProyecto] es CodeGenerator
+            Genera un archivo que contenga el codigo de la clase para model llamado [NombreEntidad]Model.cs
 
             Que implemente la siguente interfaz
 
@@ -188,35 +197,52 @@ def generate_model_coms(documentation_sps: str, entidades: str, interfaz: str) -
     prompt_and_model = promptTemplate | model
 
     # Ejecutar el modelo con la consulta y obtener la salida
-    output = prompt_and_model.invoke({"documentation_sps": documentation_sps, "framgento_codigo": framgento_codigo, "entidades": entidades, "interfaz": interfaz})
+    output = prompt_and_model.invoke({"framgento_codigo": framgento_codigo, "entidades": entidades, "interfaz": interfaz})
 
     # Parsear la salida para convertirla en una instancia de CodeResponseResult
     return generate_code_response(model, clean_code_mll_generated(output.content))
 
 def generate_controller_coms(documentation_interfaz: str) -> CodeResponseResult:
     
-    model = ChatOpenAI(model="gpt-4o-mini")
+    model = ChatModelSingleton()
 
     framgento_codigo = """
+        using FolderView.Dapper.Entidades;
         using FolderView.Dapper.Interfaces;
-        using FolderView.ModelViews.FolderView;
         using Microsoft.AspNetCore.Mvc;
         using Newtonsoft.Json;
+        using System.Collections.Generic;
+        using System.Threading.Tasks;
 
         namespace FolderView.Controllers
         {
-            public class FolderViewController : Controller
+            public class TipoProyectoController : Controller
             {
-                private readonly IDirectoryRepository _directorioRepositorio;
-                private readonly IArchivoRepository _archivoRepositorio;
+                private readonly ITipoProyectoRepository _TipoProyectoRepositorio;
 
-                public FolderViewController(
-                    IDirectoryRepository  directorioRepositorio,
-                    IArchivoRepository archivoRepositorio
-                )
+                public TipoProyectoController(ITipoProyectoRepository TipoProyectoRepositorio)
                 {
-                    _directorioRepositorio = directorioRepositorio;
-                    _archivoRepositorio = archivoRepositorio;
+                    _TipoProyectoRepositorio = TipoProyectoRepositorio;
+                }
+
+                [HttpGet("")]
+                public async Task<IActionResult> tipoproyecto()
+                {
+                    return View();
+                }
+
+                [HttpGet("api/tipoproyecto/{id}")]
+                public async Task<IActionResult> GetTipoProyectoById(int id)
+                {
+                    var result = await _TipoProyectoRepositorio.GetTipoProyectoByIdAsync(id);
+                    return Ok(result);
+                }
+
+                [HttpGet("api/tipoproyecto")]
+                public async Task<IActionResult> GetAllTipoProyecto()
+                {
+                    var result = await _TipoProyectoRepositorio.GetAllTipoProyectoAsync();
+                    return Ok(result);
                 }
             }
         }
@@ -231,15 +257,14 @@ def generate_controller_coms(documentation_interfaz: str) -> CodeResponseResult:
             {documentation_interfaz} 
             
 
-            Genera un archivo que contenga el codigo de la clase para controller llamado [NombreProyecto]Controller.cs que 
+            Genera un archivo que contenga el codigo de la clase para controller llamado [NombreEntidad]Controller.cs donde NombreEntidad es el nombre del objeto con el que se esta trabajando
 
-            El [NombreProyecto] es CodeGenerator
             
             Esto tomando como referencia la siguiente clase para que sigas el mismo estilo de codigo.
 
             {framgento_codigo}
                         
-            Asegurate de implementar un endpoint para cada metodo
+            Asegurate de implementar un endpoint para cada metodo y un metodo para llamar la vista index.
         """
     )
 
@@ -252,9 +277,9 @@ def generate_controller_coms(documentation_interfaz: str) -> CodeResponseResult:
     # Parsear la salida para convertirla en una instancia de CodeResponseResult
     return generate_code_response(model, clean_code_mll_generated(output.content))
 
-def generate_views_coms(documentation_controller: str, entidades:str) -> CodeResponseResult:
+def generate_views_coms(documentation_controller: str, documentacion_entidad:str) -> CodeResponseResult:
     
-    model = ChatOpenAI(model="gpt-4o-mini")
+    model = ChatModelSingleton()
 
     fragmento_codigo = """
         @{
@@ -440,7 +465,7 @@ def generate_views_coms(documentation_controller: str, entidades:str) -> CodeRes
 
             Con sidera que estos son las entidades
 
-            {entidades}
+            {documentacion_entidad}
 
             Sigue el siguiente fragmento de codigo como ejemplo.
 
@@ -448,7 +473,6 @@ def generate_views_coms(documentation_controller: str, entidades:str) -> CodeRes
 
             Pero ademas agrega validacion y decora los inputs con un error y mensaje al no cumplirse las validaciones.
 
-            Identifica cada una de las entidades y genera un archivo crud para cada una de ellas de forma inteligente tomando en cuenta sus relaciones entre si
         """
     )
 
@@ -456,7 +480,7 @@ def generate_views_coms(documentation_controller: str, entidades:str) -> CodeRes
     prompt_and_model = promptTemplate | model
 
     # Ejecutar el modelo con la consulta y obtener la salida
-    output = prompt_and_model.invoke({"documentation_controller": documentation_controller, "fragmento_codigo": fragmento_codigo, "entidades": entidades})
+    output = prompt_and_model.invoke({"documentation_controller": documentation_controller, "fragmento_codigo": fragmento_codigo, "documentacion_entidad": documentacion_entidad})
 
     # Parsear la salida para convertirla en una instancia de CodeResponseResult
     return generate_code_response(model, clean_code_mll_generated(output.content))
