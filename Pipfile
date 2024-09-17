@@ -4,13 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-langchain = "*"
+langchain = "0.2"
 langchain-openai = "*"
 langchainhub = "*"
 shell = "*"
 flask = "*"
 pyodbc = "*"
 flask-sqlalchemy = "*"
+flask-cors = "*"
 
 [dev-packages]
 
