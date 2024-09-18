@@ -1,6 +1,5 @@
 from langchain_openai import ChatOpenAI
 
-
 class ChatModelSingleton:
     _instance = None
 

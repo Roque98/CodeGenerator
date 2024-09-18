@@ -47,8 +47,11 @@ def generate_sps(script_table: str) -> CodeResponseResult :
     # Ejecutar el modelo con la consulta y obtener la salida
     output = prompt_and_model.invoke({"script_table": script_table, "date": datetime.now()})
 
-    # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return generate_code_response(model, clean_code_mll_generated(output.content))
+    # Limpiar el código generado por el modelo 
+    cleaned_output = clean_code_mll_generated(output.content)
+
+    # Generar la respuesta en formato CodeResponseResult
+    return generate_code_response(cleaned_output)
 
 def generate_entidad_coms( script_table: str) -> CodeResponseResult:
     
@@ -76,8 +79,11 @@ def generate_entidad_coms( script_table: str) -> CodeResponseResult:
     # Ejecutar el modelo con la consulta y obtener la salida
     output = prompt_and_model.invoke({"script_table": script_table})
 
-    # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return generate_code_response(model, clean_code_mll_generated(output.content))
+    # Limpiar el código generado por el modelo 
+    cleaned_output = clean_code_mll_generated(output.content)
+
+    # Generar la respuesta en formato CodeResponseResult
+    return generate_code_response(cleaned_output)
 
 def generate_interfaz_coms( codigo_entidad: str) -> CodeResponseResult:
     
@@ -135,8 +141,11 @@ def generate_interfaz_coms( codigo_entidad: str) -> CodeResponseResult:
     # Ejecutar el modelo con la consulta y obtener la salida
     output = prompt_and_model.invoke({"codigo_entidad": codigo_entidad, "lista_interfaces": lista_interfaces,"fragmento_codigo" : fragmento_codigo})
 
-    # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return generate_code_response(model, clean_code_mll_generated(output.content))
+    # Limpiar el código generado por el modelo 
+    cleaned_output = clean_code_mll_generated(output.content)
+
+    # Generar la respuesta en formato CodeResponseResult
+    return generate_code_response(cleaned_output)
 
 def generate_model_coms(entidades: str, interfaz: str) -> CodeResponseResult:
     
@@ -199,8 +208,11 @@ def generate_model_coms(entidades: str, interfaz: str) -> CodeResponseResult:
     # Ejecutar el modelo con la consulta y obtener la salida
     output = prompt_and_model.invoke({"framgento_codigo": framgento_codigo, "entidades": entidades, "interfaz": interfaz})
 
-    # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return generate_code_response(model, clean_code_mll_generated(output.content))
+    # Limpiar el código generado por el modelo 
+    cleaned_output = clean_code_mll_generated(output.content)
+
+    # Generar la respuesta en formato CodeResponseResult
+    return generate_code_response(cleaned_output)
 
 def generate_controller_coms(documentation_interfaz: str) -> CodeResponseResult:
     
@@ -274,8 +286,11 @@ def generate_controller_coms(documentation_interfaz: str) -> CodeResponseResult:
     # Ejecutar el modelo con la consulta y obtener la salida
     output = prompt_and_model.invoke({"framgento_codigo": framgento_codigo, "documentation_interfaz": documentation_interfaz})
 
-    # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return generate_code_response(model, clean_code_mll_generated(output.content))
+    # Limpiar el código generado por el modelo 
+    cleaned_output = clean_code_mll_generated(output.content)
+
+    # Generar la respuesta en formato CodeResponseResult
+    return generate_code_response(cleaned_output)
 
 def generate_views_coms(documentation_controller: str, documentacion_entidad:str) -> CodeResponseResult:
     
@@ -482,8 +497,11 @@ def generate_views_coms(documentation_controller: str, documentacion_entidad:str
     # Ejecutar el modelo con la consulta y obtener la salida
     output = prompt_and_model.invoke({"documentation_controller": documentation_controller, "fragmento_codigo": fragmento_codigo, "documentacion_entidad": documentacion_entidad})
 
-    # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return generate_code_response(model, clean_code_mll_generated(output.content))
+    # Limpiar el código generado por el modelo 
+    cleaned_output = clean_code_mll_generated(output.content)
+
+    # Generar la respuesta en formato CodeResponseResult
+    return generate_code_response(cleaned_output)
 
 
 # def generate_all_code_coms(script_table: str) -> [] :
