@@ -104,10 +104,10 @@ def generate_interfaz_coms( codigo_entidad: str) -> CodeResponseResult:
     """
 
     lista_interfaces = """
-            Task<List<TipoProyectoEntidad>> CreateTipoProyectoAsync(CreateTipoProyectoEntidad dto);
+            Task<List<TipoProyectoEntidad>> CreateTipoProyectoAsync(TipoProyectoEntidad dto);
             Task<TipoProyectoEntidad> GetTipoProyectoByIdAsync(int id);
             Task<List<TipoProyectoEntidad>> GetAllTipoProyecto();
-            Task<List<TipoProyectoEntidad>> UpdateTipoProyectoAsync(UpdateTipoProyectoEntidad dto);
+            Task<List<TipoProyectoEntidad>> UpdateTipoProyectoAsync(TipoProyectoEntidad dto);
             Task<bool> TipoProyectoEntidad(int id);
 
             Solo en caso de que exista alguna dependecia generar este metodo
@@ -276,7 +276,9 @@ def generate_controller_coms(documentation_interfaz: str) -> CodeResponseResult:
 
             {framgento_codigo}
                         
-            Asegurate de implementar un endpoint para cada metodo y un metodo para llamar la vista index.
+            Asegurate de implementar un endpoint para cada metodo y un metodo para llamar la vista index. 
+
+            Como consideracion adicional por cada elemento result asegura de poblar sus propiedades usando los otros metodos creados
         """
     )
 

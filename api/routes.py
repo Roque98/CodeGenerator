@@ -1,25 +1,29 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from langchain_openai import ChatOpenAI
 
 from services.IA_Response_Generator import generate_code_result
 from services.coms_codeGenerator import generate_controller_coms, generate_entidad_coms, generate_interfaz_coms, generate_model_coms, generate_sps, generate_views_coms
+from services.promt_response import generate_response
 
 app = Flask(__name__)
 
+# Habilitar CORS para todas las rutas
+CORS(app)
 
-@app.route('/generate/code', methods=['POST'])
-def generate_code_response_route():
+@app.route('/generate/', methods=['POST'])
+def generate_sps_route():
     data = request.json
     promptTemplate = data.get('promptTemplate')
     params = data.get('params', {})  # Recibir los parámetros como un diccionario, con un valor por defecto vacío
 
     # Validar que el prompt haya sido proporcionado
     if not promptTemplate:
-        return jsonify({"error": "Prompt is required"}), 400
+        return jsonify({"error": "promptTemplate is required"}), 400
 
     # Ejecutar la función para generar el resultado
     try:
-        result = generate_code_result(promptTemplate, params)
+        result = generate_response(promptTemplate, params)
         
         # Convertir el resultado a diccionario si es necesario
         response_dict = result.dict() if hasattr(result, 'dict') else result
@@ -29,14 +33,14 @@ def generate_code_response_route():
     except Exception as e:
         # Manejar cualquier error durante la ejecución
         return jsonify({"error": str(e)}), 500
-
-
+    
+    
 @app.route('/coms/getEntities', methods=['POST'])
 def get_all_entities_coms():
     data = request.json
     script_table = data.get('script_table')
 
-    result_entidad = generate_entidad_coms(script_table)\
+    result_entidad = generate_entidad_coms(script_table)
     
     responses = [result_entidad]
 
