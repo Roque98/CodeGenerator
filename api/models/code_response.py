@@ -4,8 +4,6 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 
-from models import ChatModelSingleton
-
 class CodeResponseResult(BaseModel):
     """
     Clase que representa el resultado de una respuesta que contiene código y su ubicación.
@@ -16,9 +14,9 @@ class CodeResponseResult(BaseModel):
                     Es un string que puede ser `None` por defecto.
     """
 
-    code: str = Field(default=None, description="All the code")
-    # path: str = Field(default=None, description="The name of path with this format (Entities or Models Views or Controllers or sql_scripts)/Name_path.extension. Example: Views/index.cshtml or sql/insert.sql")
-    documentation: str = Field(default=None, description=
+    contenido: str = Field(default=None, description="All the code")
+    path: str = Field(default=None, description="The name of path with this format (Entities or Models Views or Controllers or sql_scripts)/Name_path.extension. Example: index.cshtml or insert.sql etc.")
+    documentacion: str = Field(default=None, description=
                                """The list of the name and description of the all instance in the file with this format: 
                                     (Name of method or Name of sp) : Description
                                     (Name of method or Name of sp) : Description

@@ -1,9 +1,7 @@
-from datetime import datetime
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
 
-from models import ChatModelSingleton
 from models.code_response import CodeResponseResult, generate_code_response
 from services.utils import clean_code_mll_generated
 from typing import List, Dict

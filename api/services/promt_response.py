@@ -19,6 +19,7 @@ def generate_response(prompt: str, params: Dict[str, str]) -> CodeResponseResult
     output = prompt_and_model.invoke(params)
 
     resultCode = clean_code_mll_generated(output.content)
-
+                
     # Parsear la salida para convertirla en una instancia de CodeResponseResult
-    return generate_code_response(model, resultCode )
+    return generate_code_response(resultCode )
+
